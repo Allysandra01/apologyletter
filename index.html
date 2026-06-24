@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Sorry Letter - Write & Send Apologies</title>
+    <!-- Google Fonts for handwriting and editorial aesthetics -->
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for UI icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#8A5F41',
+                            medium: '#A77F60',
+                            light: '#F3E4C9',
+                            darker: '#5E3E28',
+                            paper: '#FAF5EA'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                        hand: ['Caveat', 'cursive']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for parchment pages */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(167, 127, 96, 0.1);
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #A77F60;
+            border-radius: 8px;
+        }
+        
+        /* Realistic ruled paper background effect */
+        .ruled-paper {
+            background-color: #FAF5EA;
+            background-image: linear-gradient(#e1d3b7 1px, transparent 1px);
+            background-size: 100% 2rem;
+            line-height: 2rem;
+        }
+
+        /* Page flip and vanish animations */
+        .page-container {
+            perspective: 1500px;
+        }
+        .book-page {
+            transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.6s ease;
+            transform-origin: left center;
+            backface-visibility: hidden;
+        }
+        .book-page.flipped {
+            transform: rotateY(-180deg);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Custom float animations for surprise icons */
+        @keyframes float-up {
+            0% {
+                transform: translateY(100vh) translateX(0) scale(0.5);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-10vh) translateX(var(--drift)) scale(1.5) rotate(var(--rotation));
+                opacity: 0;
+            }
+        }
+        .surprise-particle {
+            position: fixed;
+            bottom: -50px;
+            pointer-events: none;
+            z-index: 999;
+            animation: float-up var(--duration) ease-out forwards;
+        }
+
+        /* Seal beat effect */
+        @keyframes seal-pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(138, 95, 65, 0.4); }
+            50% { transform: scale(1.08); box-shadow: 0 8px 25px rgba(138, 95, 65, 0.6); }
+        }
+        .pulse-seal {
+            animation: seal-pulse 2s infinite ease-in-out;
+        }
+
+        /* 3D Envelope flaps */
+        .envelope-wrapper {
+            perspective: 1000px;
+        }
+        .envelope-flap {
+            transform-origin: top center;
+            transition: transform 0.6s ease;
+            z-index: 20;
+        }
+        .envelope-flap.open {
+            transform: rotateX(180deg);
+            z-index: 5;
+        }
+
+        /* Noise overlay for paper textures */
+        .paper-grain {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+        }
+    </style>
+</head>
+<body class="bg-brand-light text-slate-800 font-sans min-h-screen flex flex-col selection:bg-brand-medium selection:text-white overflow-x-hidden relative">
+
+    <!-- Background decorative textures -->
+    <div class="absolute inset-0 paper-grain pointer-events-none z-0"></div>
+
+    <!-- Header / Navbar -->
+    <header class="w-full py-4 px-6 border-b border-brand-medium/20 flex justify-between items-center bg-brand-light/90 backdrop-blur-sm sticky top-0 z-40">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="goToHome()">
+            <div class="w-10 h-10 rounded-xl bg-brand-dark flex items-center justify-center shadow-md">
+                <i class="fa-solid fa-envelope-open-text text-brand-light text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-serif font-bold text-xl text-brand-dark leading-tight">A Sorry Letter</h1>
+                <p class="text-[10px] uppercase tracking-wider text-brand-medium font-semibold">Peace & Reconciliation</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+            <button id="navWriteBtn" onclick="initNewLetter()" class="hidden md:flex items-center gap-2 px-4 py-2 bg-brand-dark text-brand-light hover:bg-brand-darker rounded-xl transition font-medium text-sm shadow-sm">
+                <i class="fa-solid fa-pen-fancy"></i> Write Apology
+            </button>
+            <span class="text-xs text-brand-medium hidden sm:inline-block font-medium italic border-l border-brand-medium/30 pl-4">
+                "Words make paths where there were none."
+            </span>
+        </div>
+    </header>
+
+    <!-- Main Content Dynamic Container -->
+    <main class="flex-grow flex flex-col justify-center items-center py-6 px-4 md:px-8 max-w-7xl mx-auto w-full z-10 relative">
+        
+        <!-- ==================== SCREEN 1: WELCOME SCREEN ==================== -->
+        <section id="welcomeScreen" class="w-full max-w-4xl grid md:grid-cols-12 gap-8 items-center py-4 my-auto">
+            <!-- Left Promo Column -->
+            <div class="md:col-span-7 space-y-6 text-center md:text-left">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-medium/10 text-brand-dark rounded-full text-xs font-semibold tracking-wide">
+                    <i class="fa-solid fa-heart-pulse animate-pulse"></i> RESTORE CONNECTION
+                </span>
+                <h2 class="font-serif text-4xl sm:text-5xl lg:text-6xl text-brand-dark font-bold leading-tight">
+                    Sometimes, <br>
+                    <span class="italic text-brand-medium">"I'm Sorry"</span> is best written.
+                </h2>
+                <p class="text-slate-600 text-base sm:text-lg leading-relaxed max-w-lg mx-auto md:mx-0">
+                    Express sincere regrets, unburden your heart, and seal it with a warm symbolic surprise. We package your emotions in a beautiful digital notebook with pages that can be flipped and stored dynamically in a simple shareable link.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-3 pt-2 justify-center md:justify-start">
+                    <button onclick="switchToMode('write')" class="px-8 py-4 bg-brand-dark hover:bg-brand-darker text-brand-light font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-feather-pointed"></i> Start Your Sorry Letter
+                    </button>
+                    <button onclick="showInstructions()" class="px-6 py-4 bg-white/70 hover:bg-white text-brand-dark font-semibold border border-brand-medium/30 rounded-xl transition duration-300 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-circle-question"></i> How it works
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Visual / Decorative Column -->
+            <div class="md:col-span-5 flex justify-center items-center">
+                <div class="relative w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96">
+                    <!-- Envelope background shadow element -->
+                    <div class="absolute inset-4 bg-brand-medium/10 rounded-3xl blur-2xl transform rotate-6 scale-95"></div>
+                    <!-- Tactile Envelope Widget -->
+                    <div class="absolute inset-0 bg-white rounded-2xl p-6 border-2 border-brand-medium/20 shadow-xl flex flex-col justify-between transform -rotate-3 hover:rotate-0 transition duration-500">
+                        <div class="flex justify-between items-start">
+                            <span class="text-[11px] font-mono tracking-widest text-brand-medium uppercase">STAMP HERE</span>
+                            <div class="w-14 h-14 border-2 border-dashed border-brand-medium/40 rounded-lg flex items-center justify-center text-brand-medium/50 text-2xl">
+                                🕊️
+                            </div>
+                        </div>
+                        <div class="my-6 text-center space-y-1">
+                            <p class="font-serif text-lg text-brand-dark italic">For someone special</p>
+                            <div class="w-24 h-0.5 bg-brand-medium/30 mx-auto"></div>
+                            <p class="text-xs text-slate-400 font-mono">ENVELOPE NO. 812-SORRY</p>
+                        </div>
+                        <div class="flex items-center gap-3 text-xs text-slate-500 border-t border-slate-100 pt-3">
+                            <i class="fa-solid fa-envelope text-brand-medium"></i>
+                            <span>Write, choose surprise, copy link & send.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==================== SCREEN 2: NOTEBOOK EDITOR ==================== -->
+        <section id="editorScreen" class="w-full max-w-5xl hidden flex-col lg:flex-row gap-8 items-stretch py-2 min-h-[600px]">
+            
+            <!-- Left Side: Interactive Notebook Paper -->
+            <div class="flex-grow lg:w-2/3 flex flex-col">
+                <div class="bg-brand-dark text-brand-light px-6 py-4 rounded-t-2xl shadow-md flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-pen-nib"></i>
+                        <span class="font-serif font-bold tracking-wide">Apology Notebook Binder</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span id="pageIndicator" class="bg-brand-medium/30 px-3 py-1 rounded-full font-mono font-semibold">Page 1 of 1</span>
+                    </div>
+                </div>
+
+                <!-- The Actual Ringed Binder Visual Container -->
+                <div class="bg-white rounded-b-2xl shadow-xl flex flex-row relative min-h-[500px] border-x border-b border-brand-medium/30 overflow-hidden">
+                    
+                    <!-- Decorative Binder Rings (left border margin overlay) -->
+                    <div class="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-slate-200 to-white flex flex-col justify-around py-4 border-r border-slate-200 z-10">
+                        <!-- Ring loops -->
+                        <div class="w-6 h-3 bg-gradient-to-b from-slate-400 to-slate-300 rounded-full border border-slate-400 transform -translate-x-1.5 shadow-sm"></div>
+                        <div class="w-6 h-3 bg-gradient-to-b from-slate-400 to-slate-300 rounded-full border border-slate-400 transform -translate-x-1.5 shadow-sm"></div>
+                        <div class="w-6 h-3 bg-gradient-to-b from-slate-400 to-slate-300 rounded-full border border-slate-400 transform -translate-x-1.5 shadow-sm"></div>
+                        <div class="w-6 h-3 bg-gradient-to-b from-slate-400 to-slate-300 rounded-full border border-slate-400 transform -translate-x-1.5 shadow-sm"></div>
+                        <div class="w-6 h-3 bg-gradient-to-b from-slate-400 to-slate-300 rounded-full border border-slate-400 transform -translate-x-1.5 shadow-sm"></div>
+                        <div class="w-6 h-3 bg-gradient-to-b from-slate-400 to-slate-300 rounded-full border border-slate-400 transform -translate-x-1.5 shadow-sm"></div>
+                        <div class="w-6 h-3 bg-gradient-to-b from-slate-400 to-slate-300 rounded-full border border-slate-400 transform -translate-x-1.5 shadow-sm"></div>
+                    </div>
+
+                    <!-- Main Notebook Paper Area -->
+                    <div class="flex-grow pl-12 pr-6 py-6 flex flex-col relative bg-[#FAF5EA] paper-grain">
+                        
+                        <!-- Subject & Author lines at top -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="letterSubject" class="block text-[11px] font-bold text-brand-medium tracking-widest uppercase mb-1">Subject of Letter</label>
+                                <input type="text" id="letterSubject" placeholder="e.g., I'm so sorry for what happened yesterday..." 
+                                       class="w-full bg-transparent border-b-2 border-brand-medium/30 focus:border-brand-dark py-1 text-base font-serif italic text-brand-dark outline-none transition placeholder:text-slate-400">
+                            </div>
+                            <div>
+                                <label for="letterAuthor" class="block text-[11px] font-bold text-brand-medium tracking-widest uppercase mb-1">Your Name / Author</label>
+                                <input type="text" id="letterAuthor" placeholder="e.g., With love, Alex" 
+                                       class="w-full bg-transparent border-b-2 border-brand-medium/30 focus:border-brand-dark py-1 text-base font-serif italic text-brand-dark outline-none transition placeholder:text-slate-400">
+                            </div>
+                        </div>
+
+                        <!-- Lined Paper with Text Content -->
+                        <div class="flex-grow flex flex-col relative">
+                            <!-- Page selector tabs (horizontal scrolling if many pages) -->
+                            <div class="flex items-center gap-1.5 mb-2 overflow-x-auto pb-1 max-w-full custom-scrollbar" id="editorPagesTabs">
+                                <!-- Generated Dynamically -->
+                            </div>
+
+                            <!-- Page text area -->
+                            <div class="relative flex-grow">
+                                <textarea id="pageTextArea" oninput="handleTextAreaInput()" placeholder="Write your thoughts here... Take your time. True apologies come from the heart." 
+                                          class="w-full h-full min-h-[300px] bg-transparent ruled-paper text-slate-800 font-hand text-2xl focus:outline-none resize-none overflow-y-auto custom-scrollbar relative z-10 p-2"></textarea>
+                                <div class="absolute bottom-2 right-2 text-xs text-brand-medium font-mono font-medium opacity-70 z-20 pointer-events-none" id="charCounter">
+                                    0 characters
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation & Page Operations Row -->
+                        <div class="mt-4 pt-3 border-t border-brand-medium/20 flex flex-wrap justify-between items-center gap-3">
+                            <div class="flex items-center gap-2">
+                                <button onclick="editorPrevPage()" id="editorPrevBtn" class="px-3 py-1.5 bg-brand-medium/10 hover:bg-brand-medium/20 text-brand-dark rounded-lg text-xs font-semibold disabled:opacity-30 disabled:pointer-events-none transition">
+                                    <i class="fa-solid fa-chevron-left"></i> Prev
+                                </button>
+                                <button onclick="editorNextPage()" id="editorNextBtn" class="px-3 py-1.5 bg-brand-medium/10 hover:bg-brand-medium/20 text-brand-dark rounded-lg text-xs font-semibold disabled:opacity-30 disabled:pointer-events-none transition">
+                                    Next <i class="fa-solid fa-chevron-right"></i>
+                                </button>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <button onclick="deleteCurrentPage()" id="deletePageBtn" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-semibold border border-red-200 transition">
+                                    <i class="fa-solid fa-trash-can"></i> Delete Page
+                                </button>
+                                <button onclick="addNewPage()" class="px-3 py-1.5 bg-brand-medium text-brand-light hover:bg-brand-dark rounded-lg text-xs font-semibold transition shadow-sm">
+                                    <i class="fa-solid fa-plus"></i> Add New Page
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Sidebar Controls (Surprise Choice & Share generation) -->
+            <div class="lg:w-1/3 flex flex-col gap-6">
+                <!-- Choose Surprise Icon Card -->
+                <div class="bg-white rounded-2xl p-6 shadow-md border border-brand-medium/20 space-y-4">
+                    <div>
+                        <h3 class="font-serif font-bold text-lg text-brand-dark flex items-center gap-2">
+                            <i class="fa-solid fa-gift text-brand-medium"></i> Choose a Surprise Icon
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-1">This icon seals the envelope and bursts out in a festive interactive shower when opened.</p>
+                    </div>
+
+                    <!-- Icon Grid -->
+                    <div class="grid grid-cols-3 gap-3" id="iconSelectorGrid">
+                        <!-- Icon Option 1 -->
+                        <div onclick="selectSurpriseIcon(0, '❤️')" class="surprise-icon-opt cursor-pointer p-3 rounded-xl border-2 border-brand-medium/20 bg-brand-light/20 hover:bg-brand-light/40 transition text-center active:scale-95 flex flex-col items-center gap-1" data-index="0">
+                            <span class="text-3xl">❤️</span>
+                            <span class="text-[10px] font-semibold text-slate-500">Love</span>
+                        </div>
+                        <!-- Icon Option 2 -->
+                        <div onclick="selectSurpriseIcon(1, '🌸')" class="surprise-icon-opt cursor-pointer p-3 rounded-xl border-2 border-brand-medium/20 bg-brand-light/20 hover:bg-brand-light/40 transition text-center active:scale-95 flex flex-col items-center gap-1" data-index="1">
+                            <span class="text-3xl">🌸</span>
+                            <span class="text-[10px] font-semibold text-slate-500">Peace</span>
+                        </div>
+                        <!-- Icon Option 3 -->
+                        <div onclick="selectSurpriseIcon(2, '🧸')" class="surprise-icon-opt cursor-pointer p-3 rounded-xl border-2 border-brand-medium/20 bg-brand-light/20 hover:bg-brand-light/40 transition text-center active:scale-95 flex flex-col items-center gap-1" data-index="2">
+                            <span class="text-3xl">🧸</span>
+                            <span class="text-[10px] font-semibold text-slate-500">Comfort</span>
+                        </div>
+                        <!-- Icon Option 4 -->
+                        <div onclick="selectSurpriseIcon(3, '✨')" class="surprise-icon-opt cursor-pointer p-3 rounded-xl border-2 border-brand-medium/20 bg-brand-light/20 hover:bg-brand-light/40 transition text-center active:scale-95 flex flex-col items-center gap-1" data-index="3">
+                            <span class="text-3xl">✨</span>
+                            <span class="text-[10px] font-semibold text-slate-500">Sparkle</span>
+                        </div>
+                        <!-- Icon Option 5 -->
+                        <div onclick="selectSurpriseIcon(4, '😭')" class="surprise-icon-opt cursor-pointer p-3 rounded-xl border-2 border-brand-medium/20 bg-brand-light/20 hover:bg-brand-light/40 transition text-center active:scale-95 flex flex-col items-center gap-1" data-index="4">
+                            <span class="text-3xl">😭</span>
+                            <span class="text-[10px] font-semibold text-slate-500">Sorry</span>
+                        </div>
+                        <!-- Icon Option 6 -->
+                        <div onclick="selectSurpriseIcon(5, '🕊️')" class="surprise-icon-opt cursor-pointer p-3 rounded-xl border-2 border-brand-medium/20 bg-brand-light/20 hover:bg-brand-light/40 transition text-center active:scale-95 flex flex-col items-center gap-1" data-index="5">
+                            <span class="text-3xl">🕊️</span>
+                            <span class="text-[10px] font-semibold text-slate-500">Dove</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Card -->
+                <div class="bg-white rounded-2xl p-6 shadow-md border border-brand-medium/20 space-y-4 flex-grow flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <h3 class="font-serif font-bold text-lg text-brand-dark flex items-center gap-2">
+                            <i class="fa-solid fa-paper-plane text-brand-medium"></i> Sealed with Sincerity
+                        </h3>
+                        <div class="p-3.5 bg-brand-light/40 rounded-xl space-y-2 text-xs text-slate-600">
+                            <p class="flex items-start gap-2">
+                                <i class="fa-solid fa-circle-check text-brand-dark mt-0.5"></i>
+                                <span>All letter pages are stored in a shareable link. No signups required!</span>
+                            </p>
+                            <p class="flex items-start gap-2">
+                                <i class="fa-solid fa-circle-check text-brand-dark mt-0.5"></i>
+                                <span>The receiver will get to open an interactive wax-sealed envelope to read.</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 space-y-2">
+                        <button onclick="previewLetter()" class="w-full py-3 bg-brand-medium/10 hover:bg-brand-medium/20 text-brand-dark font-semibold rounded-xl transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-magnifying-glass"></i> Preview Apology Letter
+                        </button>
+                        <button onclick="generateApologyLink()" class="w-full py-3.5 bg-brand-dark hover:bg-brand-darker text-brand-light font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-envelope-open-text animate-bounce"></i> Send & Create Link
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==================== SCREEN 3: ENVELOPE OPENING VIEW (RECEIVER) ==================== -->
+        <section id="envelopeViewScreen" class="w-full max-w-lg hidden flex-col items-center py-6 my-auto text-center">
+            
+            <div class="mb-4 space-y-1">
+                <span class="inline-flex items-center gap-1 px-3 py-1 bg-brand-dark text-brand-light rounded-full text-xs font-semibold tracking-wide">
+                    <i class="fa-solid fa-envelope"></i> SECURE MESSAGE RECEIVED
+                </span>
+                <h3 class="font-serif text-2xl text-brand-dark font-bold mt-2">You Have Received a Sorry Letter</h3>
+                <p id="envelopeSubjectLabel" class="text-sm text-slate-500 italic px-4 truncate max-w-sm mx-auto">Subject: Apology Letter</p>
+            </div>
+
+            <!-- Envelope Wrapper -->
+            <div class="envelope-wrapper relative w-full aspect-[4/3] max-w-md my-6 mx-auto bg-slate-100 rounded-2xl shadow-2xl overflow-visible border-b-4 border-slate-300">
+                
+                <!-- Back panel of the envelope -->
+                <div class="absolute inset-0 bg-brand-paper rounded-2xl z-0 border border-slate-200 shadow-inner"></div>
+
+                <!-- Letter slip peaking out slightly -->
+                <div id="letterPeek" class="absolute left-6 right-6 bottom-4 h-40 bg-white rounded-t-lg shadow-sm border border-slate-100 flex flex-col items-center justify-center p-4 transition-all duration-700 z-10 translate-y-0">
+                    <div class="w-12 h-1 bg-brand-medium/30 rounded-full mb-2"></div>
+                    <div class="text-center font-serif text-slate-500 italic text-sm">Apology inside...</div>
+                </div>
+
+                <!-- Left flap -->
+                <div class="absolute left-0 top-0 bottom-0 w-1/2 bg-gradient-to-r from-[#e9dbbe] to-[#ebdcbfa0] rounded-l-2xl z-20 pointer-events-none" style="clip-path: polygon(0 0, 100% 50%, 0 100%);"></div>
+                <!-- Right flap -->
+                <div class="absolute right-0 top-0 bottom-0 w-1/2 bg-gradient-to-l from-[#e9dbbe] to-[#ebdcbfa0] rounded-r-2xl z-20 pointer-events-none" style="clip-path: polygon(100% 0, 0 50%, 100% 100%);"></div>
+                <!-- Bottom flap -->
+                <div class="absolute bottom-0 left-0 right-0 h-[60%] bg-gradient-to-t from-[#ebdcbfa0] to-[#f5ebd7a2] rounded-b-2xl z-25 pointer-events-none shadow-inner" style="clip-path: polygon(0 100%, 50% 0, 100% 100%);"></div>
+
+                <!-- Top folding flap -->
+                <div id="envelopeFlap" class="envelope-flap absolute top-0 left-0 right-0 h-[60%] bg-[#ebdcbfa0] rounded-t-2xl z-30" style="clip-path: polygon(0 0, 50% 100%, 100% 0);"></div>
+
+                <!-- Central Interactive Seal -->
+                <div id="envelopeSeal" onclick="triggerLetterOpening()" class="pulse-seal absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-red-700 text-white flex items-center justify-center text-3xl cursor-pointer hover:scale-110 active:scale-90 transition z-40 border-4 border-red-800 shadow-lg">
+                    <span id="sealEmoji">❤️</span>
+                </div>
+            </div>
+
+            <p class="text-sm text-brand-medium font-semibold animate-pulse mt-4">
+                <i class="fa-solid fa-circle-info"></i> Click the wax seal to open the letter for your surprise
+            </p>
+        </section>
+
+
+        <!-- ==================== SCREEN 4: FLIPPABLE LETTER VIEWER ==================== -->
+        <section id="letterViewScreen" class="w-full max-w-2xl hidden flex-col items-center py-4 my-auto">
+            
+            <div class="w-full mb-6 flex flex-wrap justify-between items-center gap-3 px-2">
+                <div>
+                    <span class="text-xs font-bold text-brand-medium uppercase tracking-widest block">Letter Subject</span>
+                    <h2 id="viewSubjectLabel" class="font-serif text-xl sm:text-2xl text-brand-dark font-bold italic">Unspecified Apology</h2>
+                </div>
+                <!-- Option to return home/write new -->
+                <button onclick="goToHome()" class="px-3.5 py-1.5 bg-brand-medium/10 hover:bg-brand-medium/20 text-brand-dark rounded-lg text-xs font-semibold transition flex items-center gap-1">
+                    <i class="fa-solid fa-rotate-left"></i> Write a Letter
+                </button>
+            </div>
+
+            <!-- Realistic Double-Paged / Single Book Page Display -->
+            <div class="page-container w-full aspect-[5/7] max-w-lg min-h-[460px] bg-[#FAF5EA] paper-grain rounded-2xl shadow-2xl relative border-t-8 border-brand-dark/40 overflow-hidden flex flex-col justify-between p-6 sm:p-8">
+                
+                <!-- Ribbon bookmark background effect -->
+            <div class="absolute right-8 top-0 w-3 h-24 bg-red-700/60 rounded-b shadow-sm z-0"></div>
+
+            <!-- Static Background lined guidelines for visuals -->
+            <div class="absolute inset-x-6 sm:inset-x-8 top-20 bottom-16 bg-transparent ruled-paper pointer-events-none opacity-40 z-0"></div>
+
+            <!-- Current Reading Area -->
+            <div class="z-10 flex-grow flex flex-col">
+                <!-- Page Number / Date Stamp Header -->
+                <div class="flex justify-between items-center text-brand-medium text-xs font-mono font-bold tracking-wider mb-6 pb-2 border-b border-brand-medium/20">
+                    <span>APOLOGY MANUSCRIPT</span>
+                    <span id="viewPageIndicator">PAGE 1 OF 3</span>
+                </div>
+
+                <!-- Page content display area with book flipping structure -->
+                <div class="flex-grow relative overflow-y-auto custom-scrollbar pr-1 max-h-[340px]">
+                    <div id="viewPageContent" class="font-hand text-3xl leading-relaxed text-slate-800 break-words whitespace-pre-line">
+                        Apology body goes here...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tactile Reader Navigation Row -->
+                <div class="z-10 mt-6 pt-3 border-t border-brand-medium/20 flex justify-between items-center">
+                    <button onclick="viewPrevPage()" id="viewPrevBtn" class="px-4 py-2 bg-brand-dark text-brand-light hover:bg-brand-darker rounded-xl text-xs font-bold shadow-sm transition disabled:opacity-30 disabled:pointer-events-none flex items-center gap-2">
+                        <i class="fa-solid fa-chevron-left"></i> Previous Page
+                    </button>
+                    
+                    <button onclick="viewNextPage()" id="viewNextBtn" class="px-4 py-2 bg-brand-dark text-brand-light hover:bg-brand-darker rounded-xl text-xs font-bold shadow-sm transition disabled:opacity-30 disabled:pointer-events-none flex items-center gap-2">
+                        Next Page <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Page indicators (Dots) -->
+            <div class="flex items-center gap-1.5 mt-5" id="viewPageDots">
+                <!-- Dynamically generated dots -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-4 text-center border-t border-brand-medium/10 bg-brand-light/40 text-xs text-brand-medium mt-auto">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p>&copy; 2026 A Sorry Letter Messenger. Crafted with love & patience.</p>
+            <div class="flex items-center gap-3">
+                <a href="#" onclick="showInstructions(); return false;" class="hover:underline font-semibold">Instructions</a>
+                <span>&bull;</span>
+                <a href="#" onclick="initNewLetter(); return false;" class="hover:underline font-semibold">Write Apology</a>
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- ==================== DIALOGS & MODALS ==================== -->
+    
+    <!-- 1. Shareable Link Generator Dialog -->
+    <div id="shareModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl transform scale-95 transition-all duration-300 relative space-y-5">
+            <button onclick="closeModal('shareModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            
+            <div class="text-center space-y-2">
+                <div class="w-16 h-16 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner border border-green-100">
+                    <i class="fa-solid fa-check-double animate-pulse"></i>
+                </div>
+                <h3 class="font-serif text-2xl text-brand-dark font-bold">Apology Sealed & Safe!</h3>
+                <p class="text-xs text-slate-500">Below is your unique, compressed shareable link. Since there is no database, all letter contents reside securely within this code.</p>
+            </div>
+
+            <!-- Link Display Area -->
+            <div class="space-y-1">
+                <label class="text-[10px] font-bold uppercase tracking-widest text-brand-medium block">Your Short Letter Link</label>
+                <div class="flex gap-2 items-stretch bg-slate-50 p-2 rounded-xl border border-slate-200">
+                    <input type="text" id="shareUrlInput" readOnly class="bg-transparent border-none outline-none text-xs text-slate-700 flex-grow font-mono px-2 select-all">
+                    <button onclick="copyShareUrl()" class="px-4 py-2 bg-brand-dark hover:bg-brand-darker text-brand-light rounded-lg text-xs font-bold transition flex items-center gap-1 shrink-0">
+                        <i class="fa-solid fa-copy"></i> Copy
+                    </button>
+                </div>
+            </div>
+
+            <!-- QR Code Integration for dynamic scanning -->
+            <div class="bg-brand-light/20 rounded-2xl p-4 flex flex-col items-center gap-2 border border-brand-medium/10">
+                <span class="text-[10px] font-bold uppercase tracking-widest text-brand-medium">Scan on Mobile</span>
+                <!-- Dynamic QR API -->
+                <img id="qrCodeImg" src="" alt="Apology QR Code" class="w-28 h-28 border border-slate-200 p-1.5 bg-white rounded-lg shadow-sm" onerror="this.src='https://placehold.co/112x112/A77F60/ffffff?text=QR+Code'">
+                <span class="text-[9px] text-slate-400">Perfect for printing on a real envelope!</span>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="closeModal('shareModal')" class="flex-grow py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition">
+                    Keep Editing
+                </button>
+                <button onclick="testGeneratedLetter()" class="flex-grow py-3 bg-brand-medium text-brand-light hover:bg-brand-dark rounded-xl text-sm font-semibold transition shadow-md">
+                    Test Reading It <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 2. Instructions Dialog -->
+    <div id="instructionsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl transform scale-95 transition-all duration-300 relative space-y-4">
+            <button onclick="closeModal('instructionsModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+
+            <h3 class="font-serif text-2xl text-brand-dark font-bold flex items-center gap-2">
+                <i class="fa-solid fa-compass text-brand-medium"></i> Sending a Letter
+            </h3>
+            
+            <div class="space-y-4 text-sm text-slate-600 leading-relaxed custom-scrollbar max-h-[400px] overflow-y-auto pr-2">
+                <p>A Sorry Letter Messenger makes it easy to repair misunderstandings through the time-honored gesture of letter writing. Here's how to craft and send yours:</p>
+                
+                <div class="space-y-3">
+                    <div class="flex gap-3">
+                        <span class="w-6 h-6 rounded-full bg-brand-light text-brand-dark font-mono font-bold flex items-center justify-center shrink-0">1</span>
+                        <div>
+                            <p class="font-bold text-slate-800">Draft Your Apology</p>
+                            <p class="text-xs">Fill out the Subject line and start writing. As your words flow, add as many parchment pages as you need to capture your thoughts fully.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="w-6 h-6 rounded-full bg-brand-light text-brand-dark font-mono font-bold flex items-center justify-center shrink-0">2</span>
+                        <div>
+                            <p class="font-bold text-slate-800">Choose a Surprise Seal</p>
+                            <p class="text-xs">Choose an icon (Love, Peace, Comfort, etc.). This icon will seal your virtual envelope and burst out dynamically when opened.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="w-6 h-6 rounded-full bg-brand-light text-brand-dark font-mono font-bold flex items-center justify-center shrink-0">3</span>
+                        <div>
+                            <p class="font-bold text-slate-800">Generate Your Letter Link</p>
+                            <p class="text-xs">Click "Send & Create Link". The system translates your text, pages, and surprise choice into a secure, shortened, compressed URL parameter string.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="w-6 h-6 rounded-full bg-brand-light text-brand-dark font-mono font-bold flex items-center justify-center shrink-0">4</span>
+                        <div>
+                            <p class="font-bold text-slate-800">Deliver with Sincerity</p>
+                            <p class="text-xs">Copy the URL or scan the dynamic QR code and send it via text message, DM, or email. When the receiver opens it, they will unlock a responsive envelope with a heart-warming surprise.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="closeModal('instructionsModal')" class="w-full py-3 bg-brand-dark hover:bg-brand-darker text-brand-light rounded-xl font-bold transition shadow-md">
+                Got It! Let's Write
+            </button>
+        </div>
+    </div>
+
+
+    <!-- 3. Simple Toast Notification Widget -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 bg-slate-800 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <i class="fa-solid fa-circle-check text-green-400" id="toastIcon"></i>
+        <span id="toastMessage" class="text-sm font-medium">Link copied to clipboard!</span>
+    </div>
+
+
+    <!-- ==================== JAVASCRIPT SYSTEM ==================== -->
+    <script>
+        
+        // Surprise Icons metadata
+        const SURPRISE_ICONS = [
+            { icon: "❤️", text: "Love", color: "#ef4444" },
+            { icon: "🌸", text: "Peace", color: "#ec4899" },
+            { icon: "🧸", text: "Comfort", color: "#d97706" },
+            { icon: "✨", text: "Sparkle", color: "#f59e0b" },
+            { icon: "😭", text: "Sorry", color: "#3b82f6" },
+            { icon: "🕊️", text: "Dove", color: "#06b6d4" }
+        ];
+
+        // Core App States
+        let currentMode = "welcome"; // welcome, write, receive-envelope, read-letter
+        
+        // Writer Notebook Editor State
+        let editorLetter = {
+            subject: "",
+            author: "",
+            iconIndex: 0,
+            pages: [""]
+        };
+        let editorCurrentPageIndex = 0;
+
+        // Receiver Book Viewer State
+        let viewerLetter = {
+            subject: "",
+            author: "",
+            iconIndex: 0,
+            pages: [""]
+        };
+        let viewerCurrentPageIndex = 0;
+
+        // On Load initialization
+        window.onload = function() {
+            
+            // Highlight default selected surprise icon
+            updateSelectedIconUI();
+
+            // Detect URL parameter for a received letter
+            const urlParams = new URLSearchParams(window.location.search);
+            const encData = urlParams.get('l');
+            
+            if (encData) {
+                // We have a letter! Transition directly to envelope receiver page
+                loadReceivedLetter(encData);
+            } else {
+                // Fresh default state
+                switchToMode('welcome');
+            }
+        };
+
+        // Screen switching controller
+        function switchToMode(mode) {
+            currentMode = mode;
+            
+            // Hide all screens initially
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('editorScreen').classList.add('hidden');
+            document.getElementById('envelopeViewScreen').classList.add('hidden');
+            document.getElementById('letterViewScreen').classList.add('hidden');
+
+            // Show current mode screen
+            if (mode === 'welcome') {
+                document.getElementById('welcomeScreen').classList.remove('hidden');
+                document.getElementById('welcomeScreen').classList.add('flex');
+                document.getElementById('navWriteBtn').classList.add('hidden');
+            } else if (mode === 'write') {
+                document.getElementById('editorScreen').classList.remove('hidden');
+                document.getElementById('editorScreen').classList.add('flex');
+                document.getElementById('navWriteBtn').classList.add('hidden');
+                
+                // Pre-populate input values from local state
+                document.getElementById('letterSubject').value = editorLetter.subject;
+                document.getElementById('letterAuthor').value = editorLetter.author;
+                
+                // Render page state
+                renderEditorPageTabs();
+                renderEditorCurrentPage();
+            } else if (mode === 'receive-envelope') {
+                document.getElementById('envelopeViewScreen').classList.remove('hidden');
+                document.getElementById('envelopeViewScreen').classList.add('flex');
+                document.getElementById('navWriteBtn').classList.remove('hidden');
+                
+                // Set surprise seal icon on receipt
+                const chosenIcon = SURPRISE_ICONS[viewerLetter.iconIndex] || SURPRISE_ICONS[0];
+                document.getElementById('sealEmoji').innerText = chosenIcon.icon;
+                document.getElementById('envelopeSubjectLabel').innerText = viewerLetter.subject ? `Subject: ${viewerLetter.subject}` : "Subject: Apology Letter";
+            } else if (mode === 'read-letter') {
+                document.getElementById('letterViewScreen').classList.remove('hidden');
+                document.getElementById('letterViewScreen').classList.add('flex');
+                document.getElementById('navWriteBtn').classList.remove('hidden');
+                
+                // Initialize letters viewer page index
+                viewerCurrentPageIndex = 0;
+                renderViewerCurrentPage();
+            }
+
+            // Scroll to top of window to prevent layouts breaking on small viewports
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goToHome() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('l')) {
+                // Clean the address bar back to clean base url
+                window.history.pushState({}, document.title, window.location.pathname);
+            }
+            switchToMode('welcome');
+        }
+
+
+        /* ==================== WRITE APOLOGY / NOTEBOOK EDITOR MODULE ==================== */
+
+        function initNewLetter() {
+            editorLetter = {
+                subject: "",
+                author: "",
+                iconIndex: 0,
+                pages: [""]
+            };
+            editorCurrentPageIndex = 0;
+            document.getElementById('letterSubject').value = "";
+            document.getElementById('letterAuthor').value = "";
+            document.getElementById('pageTextArea').value = "";
+            switchToMode('write');
+        }
+
+        function renderEditorCurrentPage() {
+            const text = editorLetter.pages[editorCurrentPageIndex] || "";
+            document.getElementById('pageTextArea').value = text;
+            
+            // Update counts
+            document.getElementById('charCounter').innerText = `${text.length} characters`;
+            
+            // Update Page indicator display
+            document.getElementById('pageIndicator').innerText = `Page ${editorCurrentPageIndex + 1} of ${editorLetter.pages.length}`;
+            
+            // Enable/Disable navigation buttons
+            document.getElementById('editorPrevBtn').disabled = (editorCurrentPageIndex === 0);
+            document.getElementById('editorNextBtn').disabled = (editorCurrentPageIndex === editorLetter.pages.length - 1);
+            
+            // Manage delete capability (keep at least one page)
+            document.getElementById('deletePageBtn').disabled = (editorLetter.pages.length <= 1);
+
+            // Sync active tab
+            const tabs = document.querySelectorAll('.editor-tab');
+            tabs.forEach((tab, index) => {
+                if (index === editorCurrentPageIndex) {
+                    tab.classList.remove('bg-brand-medium/10', 'text-slate-600');
+                    tab.classList.add('bg-brand-dark', 'text-brand-light');
+                } else {
+                    tab.classList.remove('bg-brand-dark', 'text-brand-light');
+                    tab.classList.add('bg-brand-medium/10', 'text-slate-600');
+                }
+            });
+        }
+
+        function handleTextAreaInput() {
+            const currentText = document.getElementById('pageTextArea').value;
+            editorLetter.pages[editorCurrentPageIndex] = currentText;
+            document.getElementById('charCounter').innerText = `${currentText.length} characters`;
+
+            // Auto-Add Page logic for long texts
+            // If text is extremely long (over 1000 chars), trigger option to add a page naturally
+            if (currentText.length > 1000) {
+                // Visual prompt in character count
+                document.getElementById('charCounter').innerHTML = `<span class="text-brand-dark font-bold"><i class="fa-solid fa-circle-info"></i> Page is getting full, maybe add a page?</span> (${currentText.length} chars)`;
+            }
+        }
+
+        function renderEditorPageTabs() {
+            const container = document.getElementById('editorPagesTabs');
+            container.innerHTML = "";
+
+            editorLetter.pages.forEach((page, index) => {
+                const tab = document.createElement('button');
+                tab.className = "editor-tab px-3 py-1 text-xs font-semibold rounded-lg transition shrink-0";
+                tab.innerText = `Page ${index + 1}`;
+                tab.onclick = function() {
+                    // Save previous text first just in case
+                    editorLetter.pages[editorCurrentPageIndex] = document.getElementById('pageTextArea').value;
+                    editorCurrentPageIndex = index;
+                    renderEditorCurrentPage();
+                };
+                container.appendChild(tab);
+            });
+        }
+
+        function addNewPage() {
+            // Save current page
+            editorLetter.pages[editorCurrentPageIndex] = document.getElementById('pageTextArea').value;
+            
+            // Push new empty page
+            editorLetter.pages.push("");
+            
+            // Go to the new page
+            editorCurrentPageIndex = editorLetter.pages.length - 1;
+            
+            renderEditorPageTabs();
+            renderEditorCurrentPage();
+            showToast("Added a new parchment page!", "check-circle");
+        }
+
+        function deleteCurrentPage() {
+            if (editorLetter.pages.length <= 1) return;
+
+            editorLetter.pages.splice(editorCurrentPageIndex, 1);
+            
+            // Readjust page pointers
+            if (editorCurrentPageIndex >= editorLetter.pages.length) {
+                editorCurrentPageIndex = editorLetter.pages.length - 1;
+            }
+
+            renderEditorPageTabs();
+            renderEditorCurrentPage();
+            showToast("Page deleted.", "trash");
+        }
+
+        function editorPrevPage() {
+            if (editorCurrentPageIndex > 0) {
+                editorLetter.pages[editorCurrentPageIndex] = document.getElementById('pageTextArea').value;
+                editorCurrentPageIndex--;
+                renderEditorCurrentPage();
+            }
+        }
+
+        function editorNextPage() {
+            if (editorCurrentPageIndex < editorLetter.pages.length - 1) {
+                editorLetter.pages[editorCurrentPageIndex] = document.getElementById('pageTextArea').value;
+                editorCurrentPageIndex++;
+                renderEditorCurrentPage();
+            }
+        }
+
+        // Surprise icon selector action
+        function selectSurpriseIcon(idx, emoji) {
+            editorLetter.iconIndex = idx;
+            updateSelectedIconUI();
+        }
+
+        function updateSelectedIconUI() {
+            const options = document.querySelectorAll('.surprise-icon-opt');
+            options.forEach((opt) => {
+                const index = parseInt(opt.getAttribute('data-index'));
+                if (index === editorLetter.iconIndex) {
+                    opt.classList.remove('border-brand-medium/20', 'bg-brand-light/20');
+                    opt.classList.add('border-brand-dark', 'bg-brand-medium/10', 'scale-105');
+                } else {
+                    opt.classList.remove('border-brand-dark', 'bg-brand-medium/10', 'scale-105');
+                    opt.classList.add('border-brand-medium/20', 'bg-brand-light/20');
+                }
+            });
+        }
+
+
+        /* ==================== URL STATE COMPRESSION / LINK GENERATOR ==================== */
+
+        // Encodes the complete notebook into a compressed string parameter
+        function encodeLetterState(letterObj) {
+            try {
+                // Ensure text elements are synced
+                if (currentMode === 'write') {
+                    letterObj.pages[editorCurrentPageIndex] = document.getElementById('pageTextArea').value;
+                    letterObj.subject = document.getElementById('letterSubject').value.trim();
+                    letterObj.author = document.getElementById('letterAuthor').value.trim();
+                }
+
+                // Compress data keys to make string as short as possible
+                const dataToPack = {
+                    s: letterObj.subject || "Apology Letter",
+                    a: letterObj.author || "",
+                    i: letterObj.iconIndex,
+                    p: letterObj.pages.map(p => p.trim())
+                };
+
+                const jsonStr = JSON.stringify(dataToPack);
+                // Convert JSON string to base64
+                // Handled gracefully with UTF-8 support
+                const utf8Bytes = new TextEncoder().encode(jsonStr);
+                let binaryStr = "";
+                for (let i = 0; i < utf8Bytes.byteLength; i++) {
+                    binaryStr += String.fromCharCode(utf8Bytes[i]);
+                }
+                const b64 = btoa(binaryStr);
+                
+                // Replace characters for URL friendliness
+                return encodeURIComponent(b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''));
+            } catch (err) {
+                console.error("Error packing letter state: ", err);
+                return "";
+            }
+        }
+
+        // Decodes the URL parameter string back into normal notebook object
+        function decodeLetterState(encodedStr) {
+            try {
+                // Restore padding and decode URL friendly base64 back
+                let b64 = decodeURIComponent(encodedStr);
+                b64 = b64.replace(/-/g, '+').replace(/_/g, '/');
+                while (b64.length % 4) {
+                    b64 += '=';
+                }
+                
+                const binaryStr = atob(b64);
+                const bytes = new Uint8Array(binaryStr.length);
+                for (let i = 0; i < binaryStr.length; i++) {
+                    bytes[i] = binaryStr.charCodeAt(i);
+                }
+                const jsonStr = new TextDecoder().decode(bytes);
+                const decoded = JSON.parse(jsonStr);
+
+                return {
+                    subject: decoded.s || "Apology Letter",
+                    author: decoded.a || "",
+                    iconIndex: typeof decoded.i === 'number' ? decoded.i : 0,
+                    pages: Array.isArray(decoded.p) ? decoded.p : [""]
+                };
+            } catch (err) {
+                console.error("Error unpacking letter state: ", err);
+                return null;
+            }
+        }
+
+        // Action when receiver accesses link
+        function loadReceivedLetter(urlCode) {
+            const letter = decodeLetterState(urlCode);
+            if (letter) {
+                viewerLetter = letter;
+                switchToMode('receive-envelope');
+            } else {
+                // Fallback to fresh home
+                switchToMode('welcome');
+                showToast("Oops! The apology letter link was invalid.", "exclamation-triangle");
+            }
+        }
+
+        // Finalize Letter: Create and display link modal
+        function generateApologyLink() {
+            // Validate subject/pages text isn't blank
+            const subject = document.getElementById('letterSubject').value.trim();
+            const author = document.getElementById('letterAuthor').value.trim();
+            // Sync current editor draft page state
+            editorLetter.pages[editorCurrentPageIndex] = document.getElementById('pageTextArea').value;
+            
+            // Check if any non-empty pages exist
+            const nonBlankPages = editorLetter.pages.filter(p => p.trim().length > 0);
+            if (nonBlankPages.length === 0) {
+                showToast("Please write at least a small message first!", "info-circle");
+                return;
+            }
+
+            editorLetter.subject = subject || "An Apology";
+            editorLetter.author = author || "";
+            
+            const encoded = encodeLetterState(editorLetter);
+            const relativeUrl = `?l=${encoded}`;
+            const fullUrl = window.location.origin + window.location.pathname + relativeUrl;
+
+            // Display in modal input
+            const shareInput = document.getElementById('shareUrlInput');
+            shareInput.value = fullUrl;
+
+            // Generate high-quality QR code image automatically (using tiny qr code API)
+            const qrImg = document.getElementById('qrCodeImg');
+            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(fullUrl)}&color=8A5F41&bgcolor=FAF5EA`;
+
+            // Display Modal
+            openModal('shareModal');
+        }
+
+        function copyShareUrl() {
+            const shareInput = document.getElementById('shareUrlInput');
+            shareInput.select();
+            shareInput.setSelectionRange(0, 99999); // For mobile devices
+
+            try {
+                // Standard Copy Compatibility fallback
+                document.execCommand('copy');
+                showToast("Successfully copied letter link!", "check-circle");
+            } catch (err) {
+                showToast("Could not copy link automatically.", "times-circle");
+            }
+        }
+
+        function testGeneratedLetter() {
+            closeModal('shareModal');
+            // Decode local editor to view letter directly as test
+            viewerLetter = { ...editorLetter };
+            switchToMode('receive-envelope');
+        }
+
+        function previewLetter() {
+            // Quick visual preview of currently drafted book
+            editorLetter.pages[editorCurrentPageIndex] = document.getElementById('pageTextArea').value;
+            editorLetter.subject = document.getElementById('letterSubject').value.trim() || "Preview Apology";
+            editorLetter.author = document.getElementById('letterAuthor').value.trim() || "";
+            
+            viewerLetter = { ...editorLetter };
+            switchToMode('read-letter');
+            showToast("Apology preview mode. Read through!", "info-circle");
+        }
+
+
+        /* ==================== ENVELOPE OPENING & PARTICLES MODULE ==================== */
+
+        function triggerLetterOpening() {
+            const envelopeFlap = document.getElementById('envelopeFlap');
+            const letterPeek = document.getElementById('letterPeek');
+            const seal = document.getElementById('envelopeSeal');
+            
+            // Stop seal animation and flip flap
+            seal.classList.remove('pulse-seal');
+            seal.style.transform = "translate(-50%, -50%) scale(0)";
+            seal.style.opacity = "0";
+
+            envelopeFlap.classList.add('open');
+
+            // Float the peak of letter inside envelope upwards elegantly
+            setTimeout(() => {
+                letterPeek.style.transform = "translateY(-140px)";
+                letterPeek.style.opacity = "0";
+            }, 300);
+
+            // Trigger custom floating particle surprise sequence
+            setTimeout(() => {
+                triggerSurpriseShower();
+            }, 500);
+
+            // Complete transition to letter viewer
+            setTimeout(() => {
+                switchToMode('read-letter');
+            }, 2500);
+        }
+
+        function triggerSurpriseShower() {
+            const chosen = SURPRISE_ICONS[viewerLetter.iconIndex] || SURPRISE_ICONS[0];
+            const particleCount = 45;
+
+            for (let i = 0; i < particleCount; i++) {
+                setTimeout(() => {
+                    createParticle(chosen.icon);
+                }, i * 40);
+            }
+        }
+
+        function createParticle(emojiSymbol) {
+            const particle = document.createElement('div');
+            particle.className = 'surprise-particle text-3xl select-none';
+            particle.innerText = emojiSymbol;
+
+            // Random horizontal span across complete view
+            const startX = Math.random() * 100; // view percent width
+            particle.style.left = startX + 'vw';
+            
+            // Variables for animation CSS config
+            const duration = 2 + Math.random() * 2.5; // seconds
+            const drift = (Math.random() - 0.5) * 350; // pixels
+            const rotation = (Math.random() - 0.5) * 720; // degrees
+
+            particle.style.setProperty('--duration', `${duration}s`);
+            particle.style.setProperty('--drift', `${drift}px`);
+            particle.style.setProperty('--rotation', `${rotation}deg`);
+
+            document.body.appendChild(particle);
+
+            // Clean element after animation ends
+            setTimeout(() => {
+                particle.remove();
+            }, duration * 1000);
+        }
+
+
+        /* ==================== RECEIVER BOOK VIEWER MODULE ==================== */
+
+        function renderViewerCurrentPage() {
+            // The total pages including the dynamic "End Page" if an author is stated
+            const hasAuthor = viewerLetter.author && viewerLetter.author.trim() !== "";
+            const totalPages = viewerLetter.pages.length + (hasAuthor ? 1 : 0);
+            
+            const pageContent = document.getElementById('viewPageContent');
+
+            if (hasAuthor && viewerCurrentPageIndex === viewerLetter.pages.length) {
+                // Render the signature block style End Page
+                pageContent.innerHTML = `
+                    <div class="flex flex-col items-center justify-center text-center h-full min-h-[220px] pt-8 space-y-6">
+                        <div class="text-xl italic text-brand-medium font-serif">Sincerely & with hope,</div>
+                        <div class="text-4xl font-hand font-bold text-brand-dark tracking-wide border-b border-brand-medium/30 pb-2 px-6">
+                            ${viewerLetter.author}
+                        </div>
+                        <div class="text-[11px] font-mono tracking-widest text-slate-400 uppercase mt-4">
+                            - End of Letter -
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Render normal body page (revert innerHTML to plain text)
+                pageContent.innerText = viewerLetter.pages[viewerCurrentPageIndex] || "";
+            }
+
+            // Page Header Information
+            document.getElementById('viewPageIndicator').innerText = `PAGE ${viewerCurrentPageIndex + 1} OF ${totalPages}`;
+            document.getElementById('viewSubjectLabel').innerText = viewerLetter.subject;
+
+            // Configure Navigation Enable states
+            document.getElementById('viewPrevBtn').disabled = (viewerCurrentPageIndex === 0);
+            document.getElementById('viewNextBtn').disabled = (viewerCurrentPageIndex === totalPages - 1);
+
+            // Generate Dot indicators for visual feedback
+            renderViewerDots(totalPages);
+        }
+
+        function renderViewerDots(totalPages) {
+            const dotsContainer = document.getElementById('viewPageDots');
+            dotsContainer.innerHTML = "";
+
+            for (let idx = 0; idx < totalPages; idx++) {
+                const dot = document.createElement('div');
+                dot.className = `w-2 h-2 rounded-full transition ${idx === viewerCurrentPageIndex ? 'bg-brand-dark scale-125' : 'bg-brand-medium/30'}`;
+                dotsContainer.appendChild(dot);
+            }
+        }
+
+        function viewNextPage() {
+            const hasAuthor = viewerLetter.author && viewerLetter.author.trim() !== "";
+            const totalPages = viewerLetter.pages.length + (hasAuthor ? 1 : 0);
+            
+            if (viewerCurrentPageIndex < totalPages - 1) {
+                const pageContainer = document.querySelector('.page-container');
+                
+                // tactile horizontal sweep visual transition
+                pageContainer.classList.add('opacity-0', 'translate-x-12');
+                
+                setTimeout(() => {
+                    viewerCurrentPageIndex++;
+                    renderViewerCurrentPage();
+                    pageContainer.classList.remove('opacity-0', 'translate-x-12');
+                    pageContainer.classList.add('translate-x-[-12px]');
+                    
+                    // Bounce animation settling back
+                    setTimeout(() => {
+                        pageContainer.classList.remove('translate-x-[-12px]');
+                    }, 150);
+                }, 200);
+            }
+        }
+
+        function viewPrevPage() {
+            if (viewerCurrentPageIndex > 0) {
+                const pageContainer = document.querySelector('.page-container');
+                
+                pageContainer.classList.add('opacity-0', 'translate-x-[-12px]');
+                
+                setTimeout(() => {
+                    viewerCurrentPageIndex--;
+                    renderViewerCurrentPage();
+                    pageContainer.classList.remove('opacity-0', 'translate-x-[-12px]');
+                    pageContainer.classList.add('translate-x-12');
+                    
+                    setTimeout(() => {
+                        pageContainer.classList.remove('translate-x-12');
+                    }, 150);
+                }, 200);
+            }
+        }
+
+
+        /* ==================== MODAL AND TOAST CONTROLLERS ==================== */
+
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.remove('pointer-events-none', 'opacity-0');
+            modal.classList.add('opacity-100');
+            modal.querySelector('div').classList.remove('scale-95');
+            modal.querySelector('div').classList.add('scale-100');
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.add('pointer-events-none', 'opacity-0');
+            modal.classList.remove('opacity-100');
+            modal.querySelector('div').classList.add('scale-95');
+            modal.querySelector('div').classList.remove('scale-100');
+        }
+
+        function showInstructions() {
+            openModal('instructionsModal');
+        }
+
+        function showToast(message, iconName = "check-circle") {
+            const toast = document.getElementById('toast');
+            const msg = document.getElementById('toastMessage');
+            const icon = document.getElementById('toastIcon');
+
+            msg.innerText = message;
+            icon.className = `fa-solid fa-${iconName} ${iconName === 'trash' ? 'text-red-400' : 'text-green-400'}`;
+
+            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
